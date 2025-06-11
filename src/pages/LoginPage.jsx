@@ -11,12 +11,19 @@ import {
   Link as ChakraLink,
   FormErrorMessage,
 } from "@chakra-ui/react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { login } from "../features/auth/authSlice";
 import { useState } from "react";
+import {
+  doSignInWithEmailAndPassword,
+  doSignInWithGoogle,
+} from "../firebase/auth";
+import { useAuth } from "../Contexts/authContexts";
 
 const LoginPage = () => {
+  const { userLoggedIn } = useAuth();
+
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [touched, setTouched] = useState({ email: false, password: false });
@@ -24,65 +31,179 @@ const LoginPage = () => {
   const dispatch = useDispatch();
   const toast = useToast();
 
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate all fields before Firebase submission
+    const emailError = validateEmail(form.email);
+    const passwordError = validatePassword(form.password);
+
+    setErrors({ email: emailError, password: passwordError });
+    setTouched({ email: true, password: true });
+
+    // If there are validation errors, don't submit
+    if (emailError || passwordError) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors before submitting",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!isSigningIn) {
+      setIsSigningIn(true);
+      setErrorMessage("");
+
+      try {
+        const userCredential = await doSignInWithEmailAndPassword(
+          form.email,
+          form.password
+        );
+        const user = userCredential.user;
+
+        // Dispatch to Redux store
+        dispatch(
+          login({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || form.email,
+          })
+        );
+
+        toast({
+          title: "Login successful",
+          status: "success",
+          duration: 2000,
+          isClosable: true,
+        });
+
+        navigate("/dashboard");
+      } catch (error) {
+        setErrorMessage(getFirebaseErrorMessage(error.code));
+        toast({
+          title: "Login failed",
+          description: getFirebaseErrorMessage(error.code),
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+      } finally {
+        setIsSigningIn(false);
+      }
+    }
+  };
+
+  const onGoogleSignIn = async (e) => {
+    e.preventDefault();
+
+    if (!isSigningIn) {
+      setIsSigningIn(true);
+      setErrorMessage("");
+
+      try {
+        const result = await doSignInWithGoogle();
+        const user = result.user;
+
+        // Dispatch to Redux store
+        dispatch(
+          login({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || user.email,
+          })
+        );
+
+        toast({
+          title: "Google sign-in successful",
+          status: "success",
+          duration: 2000,
+          isClosable: true,
+        });
+
+        navigate("/dashboard");
+      } catch (error) {
+        setErrorMessage(getFirebaseErrorMessage(error.code));
+        toast({
+          title: "Google sign-in failed",
+          description: getFirebaseErrorMessage(error.code),
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+      } finally {
+        setIsSigningIn(false);
+      }
+    }
+  };
+
+  // Helper function to convert Firebase error codes to user-friendly messages
+  const getFirebaseErrorMessage = (errorCode) => {
+    switch (errorCode) {
+      case "auth/user-not-found":
+        return "No account found with this email address.";
+      case "auth/wrong-password":
+        return "Incorrect password. Please try again.";
+      case "auth/invalid-email":
+        return "Invalid email address format.";
+      case "auth/user-disabled":
+        return "This account has been disabled.";
+      case "auth/too-many-requests":
+        return "Too many failed attempts. Please try again later.";
+      case "auth/network-request-failed":
+        return "Network error. Please check your connection.";
+      case "auth/popup-closed-by-user":
+        return "Sign-in popup was closed before completing.";
+      case "auth/cancelled-popup-request":
+        return "Sign-in was cancelled.";
+      default:
+        return "An error occurred during sign-in. Please try again.";
+    }
+  };
+
   // Email validation function
   const validateEmail = (email) => {
-    // Check if email is empty
     if (!email.trim()) {
       return "Email is required";
     }
-
-    // Basic format validation using regex
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
       return "Please enter a valid email address";
     }
-
-    // Check email length (reasonable limits)
     if (email.length > 254) {
       return "Email address is too long";
     }
-
-    // Check local part length (before @)
     const localPart = email.split("@")[0];
     if (localPart.length > 64) {
       return "Email local part is too long";
     }
-
-    // Check for consecutive dots
     if (email.includes("..")) {
       return "Email cannot contain consecutive dots";
     }
-
-    // Check if email starts or ends with dot
     if (email.startsWith(".") || email.endsWith(".")) {
       return "Email cannot start or end with a dot";
     }
-
-    // Check domain part
     const domainPart = email.split("@")[1];
     if (domainPart) {
-      // Check if domain has at least one dot
       if (!domainPart.includes(".")) {
         return "Invalid domain format";
       }
-
-      // Check domain length
       if (domainPart.length > 253) {
         return "Domain name is too long";
       }
-
-      // Check for valid characters in domain
       const domainRegex = /^[a-zA-Z0-9.-]+$/;
       if (!domainRegex.test(domainPart)) {
         return "Domain contains invalid characters";
       }
-
-      // Check if domain starts or ends with hyphen
       if (domainPart.startsWith("-") || domainPart.endsWith("-")) {
         return "Domain cannot start or end with hyphen";
       }
     }
-
     return "";
   };
 
@@ -127,54 +248,10 @@ const LoginPage = () => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    // Validate all fields before submission
-    const emailError = validateEmail(form.email);
-    const passwordError = validatePassword(form.password);
-
-    setErrors({ email: emailError, password: passwordError });
-    setTouched({ email: true, password: true });
-
-    // If there are validation errors, don't submit
-    if (emailError || passwordError) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors before submitting",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-
-    const matchedUser = users.find(
-      (user) => user.email === form.email && user.password === form.password // Hash in real apps
-    );
-
-    if (matchedUser) {
-      localStorage.setItem("currentUser", JSON.stringify(matchedUser));
-      dispatch(login(matchedUser));
-      toast({
-        title: "Login successful",
-        status: "success",
-        duration: 2000,
-        isClosable: true,
-      });
-      navigate("/dashboard");
-    } else {
-      toast({
-        title: "Invalid credentials",
-        description: "Check your details or click above to sign up.",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-      });
-    }
-  };
+  // Redirect if already logged in
+  if (userLoggedIn) {
+    return <Navigate to="/dashboard" replace={true} />;
+  }
 
   return (
     <Box
@@ -189,7 +266,7 @@ const LoginPage = () => {
       <Heading size="md" mb="4">
         Login
       </Heading>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={onSubmit}>
         <VStack spacing="4">
           <FormControl isInvalid={touched.email && errors.email}>
             <FormLabel>Email</FormLabel>
@@ -219,13 +296,34 @@ const LoginPage = () => {
             <FormErrorMessage>{errors.password}</FormErrorMessage>
           </FormControl>
 
-          <Button 
-            type="submit" 
-            colorScheme="blue" 
+          {errorMessage && (
+            <Text color="red.300" fontSize="sm" textAlign="center">
+              {errorMessage}
+            </Text>
+          )}
+
+          <Button
+            type="submit"
+            colorScheme="blue"
             width="full"
-            isDisabled={errors.email || errors.password || !form.email || !form.password}
+            isLoading={isSigningIn}
+            loadingText="Signing in..."
+            isDisabled={
+              errors.email || errors.password || !form.email || !form.password
+            }
           >
             Login
+          </Button>
+
+          <Button
+            onClick={onGoogleSignIn}
+            colorScheme="red"
+            width="full"
+            isLoading={isSigningIn}
+            loadingText="Signing in..."
+            variant="outline"
+          >
+            Sign in with Google
           </Button>
 
           <Text fontSize="sm" mt="2">

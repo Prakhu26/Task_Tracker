@@ -17,6 +17,7 @@
     "@reduxjs/toolkit": "^2.8.2",
     "bcryptjs": "^3.0.2",
     "date-fns": "^4.1.0",
+    "firebase": "^11.9.0",
     "framer-motion": "^12.16.0",
     "legacy": "^0.0.3",
     "react": "^19.1.0",
