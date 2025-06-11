@@ -317,11 +317,10 @@ const LoginPage = () => {
 
           <Button
             onClick={onGoogleSignIn}
-            colorScheme="red"
+            colorScheme="blue"
             width="full"
             isLoading={isSigningIn}
             loadingText="Signing in..."
-            variant="outline"
           >
             Sign in with Google
           </Button>
