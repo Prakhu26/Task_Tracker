@@ -1,7 +1,7 @@
 // Create auth context - encapsulate children.
 // Use auth hook to use in different components to understand their state related parameters.
 import React, { useContext, useEffect, useState } from "react";
-import { auth } from "../../firebase/firebase"; // Fixed: Import from firebase.js, not auth.js
+import { auth } from "../../firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
 const AuthContext = React.createContext();

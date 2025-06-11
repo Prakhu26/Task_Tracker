@@ -5,7 +5,7 @@ import { ChakraProvider } from "@chakra-ui/react";
 import { Provider } from "react-redux";
 import { Store } from "./Store";
 import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "./Contexts/authContexts"; // Add this import
+import { AuthProvider } from "./Contexts/authContexts"; 
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

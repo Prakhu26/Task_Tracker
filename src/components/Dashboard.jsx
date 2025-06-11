@@ -36,7 +36,7 @@ const Dashboard = ({ setEditData }) => {
   const [filterPriority, setFilterPriority] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
-  // Flip state for task cards
+
   const [flippedCards, setFlippedCards] = useState(new Set());
 
   // Apply search and filters
@@ -51,7 +51,6 @@ const Dashboard = ({ setEditData }) => {
     return matchesSearch && matchesDate && matchesPriority && matchesStatus;
   });
 
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -270,7 +269,7 @@ const Dashboard = ({ setEditData }) => {
                     <Flex
                       justify="space-between"
                       align="center"
-                      direction="row" // Changed from { base: "column", md: "row" } to always "row"
+                      direction="row" 
                       gap="4"
                       height="100%"
                     >

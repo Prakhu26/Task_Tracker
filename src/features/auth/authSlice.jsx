@@ -1,6 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// Load user from localStorage - check both 'user' and 'currentUser' keys for compatibility
 const loadUser = () => {
   const userData = localStorage.getItem("currentUser") || localStorage.getItem("user");
   return userData ? JSON.parse(userData) : null;

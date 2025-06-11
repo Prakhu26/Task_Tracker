@@ -8,7 +8,7 @@ import {
   updatePassword,
   signOut
 } from "firebase/auth";
-import { auth } from "firebase/firebase.js"; // Fixed: Import from firebase.js
+import { auth } from "firebase/firebase";
 
 export const doCreateUserWithEmailAndPassword = async (email, password) => {
   return createUserWithEmailAndPassword(auth, email, password);
@@ -33,7 +33,6 @@ export const doSignInWithGoogle = async () => {
     const result = await signInWithPopup(auth, provider);
     return result;
   } catch (error) {
-    // Handle specific popup errors
     if (error.code === 'auth/popup-blocked') {
       throw new Error('Popup was blocked by the browser. Please allow popups for this site.');
     } else if (error.code === 'auth/popup-closed-by-user') {
