@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import ProtectedRoute from "./protectedRoute";
 import "react-toastify/dist/ReactToastify.css";
 import { Box, Button, Flex, VStack, Container, Text, Spacer } from "@chakra-ui/react";
+import { doSignOut } from "./firebase/auth";
 
 const App = () => {
   const [editData, setEditData] = useState(null);
@@ -25,6 +26,7 @@ const App = () => {
 
   const handleLogout = () => {
     dispatch(logout());
+    doSignOut();
     navigate("/");
   };
 

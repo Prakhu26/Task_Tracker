@@ -8,7 +8,7 @@ import {
   updatePassword,
   signOut
 } from "firebase/auth";
-import { auth } from "./firebase.js"; // Fixed: Import from firebase.js
+import { auth } from "firebase/firebase.js"; // Fixed: Import from firebase.js
 
 export const doCreateUserWithEmailAndPassword = async (email, password) => {
   return createUserWithEmailAndPassword(auth, email, password);

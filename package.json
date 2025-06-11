@@ -20,10 +20,12 @@
     "firebase": "^11.9.0",
     "framer-motion": "^12.16.0",
     "legacy": "^0.0.3",
+    "lucide-react": "^0.514.0",
     "react": "^19.1.0",
     "react-datepicker": "^8.4.0",
     "react-dom": "^19.1.0",
     "react-redux": "^9.2.0",
+    "react-router-dom": "^7.6.2",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.3",
     "uuid": "^11.1.0"
